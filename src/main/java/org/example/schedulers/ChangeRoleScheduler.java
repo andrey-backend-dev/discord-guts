@@ -32,7 +32,7 @@ public class ChangeRoleScheduler {
 
     private static final String ITERATION_MEMBERS_COUNT_TXT_FILENAME = "iteration-members-count.txt";
 
-    @Scheduled(cron = "0 13 3 * * ?")
+    @Scheduled(cron = "0 0 0 * * ?")
     public void changeRoleScheduled() {
         Guild guild = jda.getGuildsByName("dominance", false).getFirst();
         List<Member> ssMembers = getMembersWithRoleFrom(guild);

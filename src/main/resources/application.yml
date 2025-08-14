@@ -1,0 +1,8 @@
+bot:
+  token: ${token}
+
+scheduler:
+  change-role:
+    role:
+      from-update: SS
+      to-update: SS-God

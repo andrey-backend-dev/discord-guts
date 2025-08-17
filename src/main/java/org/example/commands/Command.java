@@ -1,11 +1,9 @@
 package org.example.commands;
 
-import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.GenericEvent;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.slf4j.Logger;
-import org.springframework.stereotype.Component;
 
 import java.util.function.Consumer;
 

@@ -1,8 +1,18 @@
 bot:
-  token: ${token}
+  token: ${TOKEN}
 
 scheduler:
   change-role:
     role:
       from-update: SS
       to-update: SS-God
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  liquibase:
+    change-log: classpath:db/changelog/0001_changelog.xml
+    enabled: true

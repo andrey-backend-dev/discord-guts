@@ -36,7 +36,6 @@ public class GutsConfig {
                     .enableIntents(EnumSet.allOf(GatewayIntent.class))
                     .addEventListeners(listeners.toArray())
                     .setMemberCachePolicy(MemberCachePolicy.ALL)
-
                     .build();
             jda.awaitReady();
             log.info("JDA instance created successfully.");

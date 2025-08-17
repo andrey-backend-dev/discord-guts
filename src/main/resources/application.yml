@@ -14,5 +14,4 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
   liquibase:
-    change-log: classpath:db/changelog/0001_changelog.xml
-    enabled: true
+    enabled: false

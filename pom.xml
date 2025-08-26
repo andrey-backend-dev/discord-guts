@@ -18,6 +18,7 @@
         <spring.version>3.5.3</spring.version>
         <lombok.version>1.18.38</lombok.version>
         <liquibase.version>4.33.0</liquibase.version>
+        <mapstruct.version>1.6.3</mapstruct.version>
     </properties>
 
     <dependencies>
@@ -52,6 +53,11 @@
             <artifactId>liquibase-core</artifactId>
             <version>${liquibase.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <version>${mapstruct.version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -80,6 +86,11 @@
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
                             <version>${lombok.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${mapstruct.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>

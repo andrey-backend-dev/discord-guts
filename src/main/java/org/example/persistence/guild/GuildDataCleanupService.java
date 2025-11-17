@@ -2,6 +2,7 @@ package org.example.persistence.guild;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.example.persistence.channelguard.ChannelGuardConfigurationRepository;
 import org.example.persistence.m2m.guildfeature.GuildFeatureRepository;
 import org.example.persistence.m2m.userguild.UserGuildRepository;
 import org.example.persistence.m2m.userguildrole.UserGuildRoleRepository;
@@ -18,6 +19,7 @@ public class GuildDataCleanupService {
     private final GuildRoleRepository guildRoleRepository;
     private final UserGuildRepository userGuildRepository;
     private final GuildFeatureRepository guildFeatureRepository;
+    private final ChannelGuardConfigurationRepository channelGuardConfigurationRepository;
     private final GuildRepository guildRepository;
 
     @Transactional
@@ -27,6 +29,7 @@ public class GuildDataCleanupService {
         guildRoleRepository.deleteAllByGuild_Id(guildId);
         userGuildRepository.deleteAllByGuild_Id(guildId);
         guildFeatureRepository.deleteAllByGuild_Id(guildId);
+        channelGuardConfigurationRepository.deleteById(guildId);
         guildRepository.deleteById(guildId);
     }
 }

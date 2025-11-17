@@ -25,4 +25,11 @@
         </rollback>
     </changeSet>
 
+    <changeSet id="4" author="scythejudge">
+        <sqlFile path="changesets/2025-09-01_ddl-channel-guard.sql" relativeToChangelogFile="true"/>
+        <rollback>
+            <sqlFile path="rollbacks/2025-09-01_ddl-channel-guard-rollback.sql" relativeToChangelogFile="true"/>
+        </rollback>
+    </changeSet>
+
 </databaseChangeLog>

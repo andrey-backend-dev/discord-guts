@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.ISnowflake;
 import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.Role;
 import org.example.features.changerole.ChangeRoleConfiguration;
@@ -12,6 +13,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -69,7 +71,7 @@ public class ChangeRoleScheduler {
 
     private List<Member> getEligibleMembers(Guild guild, Role role) {
         return guild.getMembersWithRoles(role).stream()
-                .sorted((first, second) -> Long.compare(first.getIdLong(), second.getIdLong()))
+                .sorted(Comparator.comparingLong(ISnowflake::getIdLong))
                 .collect(Collectors.toList());
     }
 

@@ -1,6 +1,5 @@
 package org.example.listeners;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
@@ -32,19 +31,13 @@ public class CommandListener extends ListenerAdapter {
 
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
-        Command<?> command = commandMap.get(event.getName());
+        Command<SlashCommandInteractionEvent> command = (Command<SlashCommandInteractionEvent>) commandMap.get(event.getName());
 
         if (command == null) {
             log.warn("Command '{}' is not registered. Event is ignored.", event.getName());
             return;
         }
 
-        if (command instanceof Command<SlashCommandInteractionEvent> slashCommand) {
-            slashCommand.execute(event);
-            return;
-        }
-
-        log.warn("Command '{}' is registered but does not support SlashCommandInteractionEvent.", event.getName());
+        command.execute(event);
     }
-
 }

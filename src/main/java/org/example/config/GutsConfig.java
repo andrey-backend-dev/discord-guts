@@ -22,17 +22,15 @@ import java.util.List;
 public class GutsConfig {
 
     @Getter
-    @Value("${token}")
+    @Value("${bot.token}")
     private String token;
     private final List<ListenerAdapter> listeners;
     private final List<Command<?>> commands;
 
     @Bean
     public JDA jda() {
-        JDA jda = null;
-
         try {
-            jda = JDABuilder.createDefault(token)
+            JDA jda = JDABuilder.createDefault(token)
                     .enableIntents(EnumSet.allOf(GatewayIntent.class))
                     .addEventListeners(listeners.toArray())
                     .setMemberCachePolicy(MemberCachePolicy.ALL)
@@ -43,10 +41,10 @@ public class GutsConfig {
                     _ -> log.info("Commands registered successfully."),
                     failure -> log.error("Commands creation failure. ", failure)
             );
+            return jda;
         } catch (Exception e) {
             log.error("JDA instance creation failure. ", e);
+            throw new IllegalStateException("Unable to initialise JDA instance", e);
         }
-
-        return jda;
     }
 }

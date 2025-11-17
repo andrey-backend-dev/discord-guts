@@ -58,15 +58,15 @@ public class ChangeRoleScheduler {
         }
 
         Member nextMember = pickMemberForToday(candidates);
-        Member currentHolder = guild.getMembersWithRoles(settableRole).stream().findFirst().orElse(null);
+        List<Member> settableHolders = guild.getMembersWithRoles(settableRole);
 
-        if (currentHolder != null && currentHolder.getIdLong() == nextMember.getIdLong()) {
+        if (settableHolders.size() == 1 && settableHolders.get(0).getIdLong() == nextMember.getIdLong()) {
             log.debug("Guild '{}' already has '{}' role assigned to '{}'. Skipping rotation.",
                     guild.getName(), settableRole.getName(), nextMember.getEffectiveName());
             return;
         }
 
-        assignRole(guild, settableRole, currentHolder, nextMember);
+        assignRole(guild, changeableRole, settableRole, settableHolders, nextMember);
     }
 
     private List<Member> getEligibleMembers(Guild guild, Role role) {
@@ -81,21 +81,44 @@ public class ChangeRoleScheduler {
         return members.get(memberIndex);
     }
 
-    private void assignRole(Guild guild, Role targetRole, Member currentHolder, Member nextMember) {
+    private void assignRole(
+            Guild guild,
+            Role changeableRole,
+            Role targetRole,
+            List<Member> currentHolders,
+            Member nextMember
+    ) {
+        long nextMemberId = nextMember.getIdLong();
+        currentHolders.forEach(holder -> {
+            guild.removeRoleFromMember(holder, targetRole).queue(
+                    _ -> log.info("Role '{}' removed from '{}' in guild '{}'.", targetRole.getName(),
+                            holder.getEffectiveName(), guild.getName()),
+                    failure -> log.error("Failed to remove role '{}' from '{}' in guild '{}'.", targetRole.getName(),
+                            holder.getEffectiveName(), guild.getName(), failure)
+            );
+
+            if (holder.getIdLong() != nextMemberId) {
+                guild.addRoleToMember(holder, changeableRole).queue(
+                        _ -> log.info("Role '{}' granted to '{}' in guild '{}'.", changeableRole.getName(),
+                                holder.getEffectiveName(), guild.getName()),
+                        failure -> log.error("Failed to grant role '{}' to '{}' in guild '{}'.", changeableRole.getName(),
+                                holder.getEffectiveName(), guild.getName(), failure)
+                );
+            }
+        });
+
+        guild.removeRoleFromMember(nextMember, changeableRole).queue(
+                _ -> log.info("Role '{}' removed from '{}' in guild '{}'.", changeableRole.getName(),
+                        nextMember.getEffectiveName(), guild.getName()),
+                failure -> log.error("Failed to remove role '{}' from '{}' in guild '{}'.", changeableRole.getName(),
+                        nextMember.getEffectiveName(), guild.getName(), failure)
+        );
+
         guild.addRoleToMember(nextMember, targetRole).queue(
                 _ -> log.info("Role '{}' granted to '{}' in guild '{}'.", targetRole.getName(),
                         nextMember.getEffectiveName(), guild.getName()),
                 failure -> log.error("Failed to grant role '{}' to '{}' in guild '{}'.", targetRole.getName(),
                         nextMember.getEffectiveName(), guild.getName(), failure)
         );
-
-        if (currentHolder != null) {
-            guild.removeRoleFromMember(currentHolder, targetRole).queue(
-                    _ -> log.info("Role '{}' removed from '{}' in guild '{}'.", targetRole.getName(),
-                            currentHolder.getEffectiveName(), guild.getName()),
-                    failure -> log.error("Failed to remove role '{}' from '{}' in guild '{}'.", targetRole.getName(),
-                            currentHolder.getEffectiveName(), guild.getName(), failure)
-            );
-        }
     }
 }

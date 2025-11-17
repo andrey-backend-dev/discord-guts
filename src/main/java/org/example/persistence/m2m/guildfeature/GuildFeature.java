@@ -1,8 +1,6 @@
 package org.example.persistence.m2m.guildfeature;
 
-import jakarta.persistence.EmbeddedId;
-import jakarta.persistence.Entity;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -20,8 +18,13 @@ public class GuildFeature {
     private GuildFeatureId id;
 
     @ManyToOne
+    @MapsId("guildId")
     private Guild guild;
 
     @ManyToOne
+    @MapsId("featureId")
     private Feature feature;
+
+    @Column(nullable = false)
+    private boolean enabled;
 }

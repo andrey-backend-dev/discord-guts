@@ -18,4 +18,11 @@
         </rollback>
     </changeSet>
 
+    <changeSet id="3" author="scythejudge">
+        <sqlFile path="changesets/2025-30-08-18-40_ddl-feature-table.sql" relativeToChangelogFile="true"/>
+        <rollback>
+            <sqlFile path="rollbacks/2025-30-08-18-40_ddl-feature-table-rollback.sql" relativeToChangelogFile="true"/>
+        </rollback>
+    </changeSet>
+
 </databaseChangeLog>

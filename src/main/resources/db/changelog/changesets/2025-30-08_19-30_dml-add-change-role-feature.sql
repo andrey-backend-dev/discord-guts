@@ -1,0 +1,1 @@
+INSERT INTO feature (name) VALUES ("CHANGE_ROLE");

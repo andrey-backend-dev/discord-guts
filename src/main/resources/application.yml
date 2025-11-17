@@ -1,12 +1,6 @@
 bot:
   token: ${TOKEN}
 
-scheduler:
-  change-role:
-    role:
-      from-update: SS
-      to-update: SS-God
-
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver

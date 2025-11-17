@@ -18,10 +18,11 @@ import java.util.stream.Collectors;
 @Component
 public class CommandListener extends ListenerAdapter {
 
-    private Map<String, Command<?>> commandMap;
+    private final Map<String, Command<?>> commandMap;
 
-    CommandListener(List<Command<?>> commands) {
-        commandMap = commands.stream().collect(Collectors.toMap(Command::getName, Function.identity()));
+    public CommandListener(List<Command<?>> commands) {
+        this.commandMap = commands.stream()
+                .collect(Collectors.toUnmodifiableMap(Command::getName, Function.identity()));
     }
 
     @Override
@@ -31,14 +32,19 @@ public class CommandListener extends ListenerAdapter {
 
     @Override
     public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
-        Command<SlashCommandInteractionEvent> command = (Command<SlashCommandInteractionEvent>) commandMap.get(event.getName());
+        Command<?> command = commandMap.get(event.getName());
 
         if (command == null) {
-            log.error("There is no such command registered at commands package. Command name: {}", event.getName());
+            log.warn("Command '{}' is not registered. Event is ignored.", event.getName());
             return;
         }
 
-        command.execute(event);
+        if (command instanceof Command<SlashCommandInteractionEvent> slashCommand) {
+            slashCommand.execute(event);
+            return;
+        }
+
+        log.warn("Command '{}' is registered but does not support SlashCommandInteractionEvent.", event.getName());
     }
 
 }

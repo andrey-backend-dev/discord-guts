@@ -48,7 +48,7 @@ public class ChangeRoleFeatureService {
         guildRoleRepository.save(changeable);
         guildRoleRepository.save(settable);
 
-        enableChangeRoleFeature(guild);
+        setFeatureEnabled(guild, true);
     }
 
     @Transactional(readOnly = true)
@@ -57,10 +57,25 @@ public class ChangeRoleFeatureService {
                 .findByFeature_NameAndEnabledTrue(FeatureName.CHANGE_ROLE);
 
         return enabledFeatures.stream()
+                .filter(guildFeature -> {
+                    Feature feature = guildFeature.getFeature();
+                    if (feature == null || !feature.isEnabled()) {
+                        log.debug("Feature '{}' is globally disabled. Skipping guild {}.",
+                                FeatureName.CHANGE_ROLE, guildFeature.getGuild().getId());
+                        return false;
+                    }
+                    return true;
+                })
                 .map(GuildFeature::getGuild)
                 .map(this::toConfiguration)
                 .flatMap(Optional::stream)
                 .toList();
+    }
+
+    @Transactional
+    public void setFeatureEnabled(net.dv8tion.jda.api.entities.Guild jdaGuild, boolean enabled) {
+        Guild guild = upsertGuild(jdaGuild);
+        setFeatureEnabled(guild, enabled);
     }
 
     private Optional<ChangeRoleConfiguration> toConfiguration(Guild guild) {
@@ -128,12 +143,8 @@ public class ChangeRoleFeatureService {
         }
     }
 
-    private void enableChangeRoleFeature(Guild guild) {
-        Feature feature = featureRepository.findByName(FeatureName.CHANGE_ROLE)
-                .orElseGet(() -> featureRepository.save(Feature.builder()
-                        .name(FeatureName.CHANGE_ROLE)
-                        .enabled(true)
-                        .build()));
+    private void setFeatureEnabled(Guild guild, boolean enabled) {
+        Feature feature = ensureFeature();
 
         GuildFeature guildFeature = guildFeatureRepository
                 .findByGuild_IdAndFeature_Name(guild.getId(), feature.getName())
@@ -141,9 +152,17 @@ public class ChangeRoleFeatureService {
                         .id(new GuildFeatureId(guild.getId(), feature.getId()))
                         .guild(guild)
                         .feature(feature)
-                        .enabled(true)
+                        .enabled(false)
                         .build());
-        guildFeature.setEnabled(true);
+        guildFeature.setEnabled(enabled);
         guildFeatureRepository.save(guildFeature);
+    }
+
+    private Feature ensureFeature() {
+        return featureRepository.findByName(FeatureName.CHANGE_ROLE)
+                .orElseGet(() -> featureRepository.save(Feature.builder()
+                        .name(FeatureName.CHANGE_ROLE)
+                        .enabled(true)
+                        .build()));
     }
 }

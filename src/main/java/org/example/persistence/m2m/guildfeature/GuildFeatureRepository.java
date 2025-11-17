@@ -11,4 +11,6 @@ public interface GuildFeatureRepository extends CrudRepository<GuildFeature, Gui
     List<GuildFeature> findByFeature_NameAndEnabledTrue(FeatureName name);
 
     Optional<GuildFeature> findByGuild_IdAndFeature_Name(Long guildId, FeatureName name);
+
+    void deleteAllByGuild_Id(Long guildId);
 }

@@ -19,6 +19,7 @@
         <lombok.version>1.18.38</lombok.version>
         <liquibase.version>4.33.0</liquibase.version>
         <mapstruct.version>1.6.3</mapstruct.version>
+        <lavaplayer.version>2.2.2</lavaplayer.version>
     </properties>
 
     <dependencies>
@@ -57,6 +58,11 @@
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
             <version>${mapstruct.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>dev.arbjerg</groupId>
+            <artifactId>lavaplayer</artifactId>
+            <version>${lavaplayer.version}</version>
         </dependency>
     </dependencies>
 

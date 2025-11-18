@@ -36,33 +36,6 @@ All agents MUST follow these principles:
 - Use **Java 21** features when they improve clarity (records, pattern matching, switch expressions).
 - Aim for **testability**: design APIs and classes to be testable with JUnit + Mockito.
 
-Before ANY change, an agent must start with **PLAN MODE**.
-
----
-
-## PLAN MODE (MANDATORY)
-
-Before implementing or refactoring anything:
-
-1. **Restate the request** in 1–3 sentences.
-2. Identify affected parts of the system:
-    - features,
-    - packages,
-    - entities,
-    - Liquibase changeLogs,
-    - configuration files.
-3. Propose a **step-by-step plan**:
-    - files to create,
-    - files to modify,
-    - refactorings to perform,
-    - migrations or config changes.
-4. Ask clarification questions if any requirement is unclear.
-5. Only after the plan is explicit and approved by the user, proceed with implementation.
-
-Agents MUST NOT guess requirements silently.
-
----
-
 ## PROJECT STRUCTURE & PACKAGING
 
 Target architecture is a **feature-based modular monolith**.
@@ -147,10 +120,6 @@ Responsibilities:
 
 Rules:
 
-- **Before major refactor**, prepare a PLAN with:
-    - current problems,
-    - target structure (brief text, optionally package-level overview),
-    - migration steps.
 - Do NOT change observable behavior unless explicitly requested.
 - After refactoring:
     - ensure all existing behavior remains intact,
@@ -293,13 +262,12 @@ Rules:
 
 After an agent finishes a task:
 
-1. Re-check the initial PLAN and ensure all steps are completed.
-2. Verify that:
+1. Verify that:
     - code compiles,
     - tests pass (or are added/updated),
     - Liquibase migrations are valid.
-3. Ensure architecture and package structure move closer to the target model, not further away.
-4. Update documentation if behavior or configuration has changed.
+2. Ensure architecture and package structure move closer to the target model, not further away.
+3. Update documentation if behavior or configuration has changed.
 
 ---
 

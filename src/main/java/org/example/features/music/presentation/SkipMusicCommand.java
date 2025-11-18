@@ -1,10 +1,12 @@
 package org.example.features.music.presentation;
 
+import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import org.example.features.music.application.MusicService;
+import org.example.features.music.domain.TrackMetadata;
 import org.springframework.stereotype.Component;
 
 @Slf4j
@@ -39,9 +41,17 @@ public class SkipMusicCommand extends AbstractMusicCommand {
                     .queue(queueSuccessConsumer(log), queueFailureConsumer(log));
             return;
         }
-        var info = skipped.get().getInfo();
-        event.reply(String.format("Трек **%s** пропущен.", info.title))
+        var track = skipped.get();
+        event.reply(String.format("Трек **%s** пропущен.", title(track)))
                 .queue(queueSuccessConsumer(log), queueFailureConsumer(log));
+    }
+
+    private String title(AudioTrack track) {
+        Object data = track.getUserData();
+        if (data instanceof TrackMetadata metadata) {
+            return metadata.titleOr(track.getInfo().title);
+        }
+        return track.getInfo().title;
     }
 
     @Override

@@ -75,7 +75,7 @@ public class QueueMusicCommand extends AbstractMusicCommand {
         }
         builder.append("Сейчас играет: ")
                 .append('[').append(formatDuration(now.getDuration())).append("] ")
-                .append(now.getInfo().title)
+                .append(title(now))
                 .append(" — ")
                 .append(requester(now))
                 .append('\n');
@@ -92,7 +92,7 @@ public class QueueMusicCommand extends AbstractMusicCommand {
             builder.append(i + 1)
                     .append('.').append(' ')
                     .append('[').append(formatDuration(track.getDuration())).append("] ")
-                    .append(track.getInfo().title)
+                    .append(title(track))
                     .append(" — ")
                     .append(requester(track))
                     .append('\n');
@@ -111,11 +111,27 @@ public class QueueMusicCommand extends AbstractMusicCommand {
     }
 
     private String requester(AudioTrack track) {
-        Object data = track.getUserData();
-        if (data instanceof TrackMetadata metadata) {
+        TrackMetadata metadata = metadata(track);
+        if (metadata != null) {
             return metadata.requesterName();
         }
         return "неизвестно";
+    }
+
+    private String title(AudioTrack track) {
+        TrackMetadata metadata = metadata(track);
+        if (metadata != null) {
+            return metadata.titleOr(track.getInfo().title);
+        }
+        return track.getInfo().title;
+    }
+
+    private TrackMetadata metadata(AudioTrack track) {
+        Object data = track.getUserData();
+        if (data instanceof TrackMetadata metadata) {
+            return metadata;
+        }
+        return null;
     }
 
     @Override

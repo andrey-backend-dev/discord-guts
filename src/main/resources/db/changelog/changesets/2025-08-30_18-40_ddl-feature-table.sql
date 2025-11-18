@@ -1,6 +1,6 @@
 CREATE TABLE feature (
     id bigint generated always as identity primary key,
-    name varchar not null,
+    name varchar not null unique,
     enabled boolean not null default true
 );
 

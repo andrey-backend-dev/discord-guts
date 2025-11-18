@@ -19,17 +19,23 @@
     </changeSet>
 
     <changeSet id="3" author="scythejudge">
-        <sqlFile path="changesets/2025-30-08-18-40_ddl-feature-table.sql" relativeToChangelogFile="true"/>
+        <sqlFile path="changesets/2025-08-30_18-40_ddl-feature-table.sql" relativeToChangelogFile="true"/>
         <rollback>
-            <sqlFile path="rollbacks/2025-30-08-18-40_ddl-feature-table-rollback.sql" relativeToChangelogFile="true"/>
+            <sqlFile path="rollbacks/2025-08-30_18-40_ddl-feature-table-rollback.sql" relativeToChangelogFile="true"/>
         </rollback>
     </changeSet>
 
     <changeSet id="4" author="scythejudge">
-        <sqlFile path="changesets/2025-09-01_ddl-channel-guard.sql" relativeToChangelogFile="true"/>
+        <sqlFile path="changesets/2025-11-17_19-00_ddl-feature-channel-guard-configuration.sql" relativeToChangelogFile="true"/>
         <rollback>
-            <sqlFile path="rollbacks/2025-09-01_ddl-channel-guard-rollback.sql" relativeToChangelogFile="true"/>
+            <sqlFile path="rollbacks/2025-11-17_19-00_ddl-feature-channel-guard-configuration-rollback.sql" relativeToChangelogFile="true"/>
         </rollback>
     </changeSet>
 
+    <changeSet id="5" author="scythejudge">
+        <sqlFile path="changesets/2025-11-18_08-30_ddl-feature-change-role-configuration.sql" relativeToChangelogFile="true"/>
+        <rollback>
+            <sqlFile path="rollbacks/2025-11-18_08-30_ddl-feature-change-role-configuration-rollback.sql" relativeToChangelogFile="true"/>
+        </rollback>
+    </changeSet>
 </databaseChangeLog>

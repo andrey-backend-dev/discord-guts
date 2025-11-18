@@ -2,11 +2,8 @@ CREATE TABLE guild_role (
     id bigint primary key,
     name varchar not null,
     guild_id bigint not null references guild(id),
-    feature_cr_is_changeable boolean not null default false,
-    feature_cr_is_settable boolean not null default false
+    UNIQUE (name, guild_id)
 );
-COMMENT ON COLUMN guild_role.feature_cr_is_changeable IS 'Признак сменяемой роли (по фиче смены ролей в опр. время)';
-COMMENT ON COLUMN guild_role.feature_cr_is_settable IS 'Признак роли, на которую происходит смена (по фиче смены ролей в опр. время)';
 
 CREATE TABLE users_guild_role (
     user_id bigint not null references users(id) on delete cascade,

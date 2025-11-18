@@ -34,7 +34,7 @@ public class LeaveMusicCommand extends AbstractMusicCommand {
         var voiceContext = voiceContextOpt.get();
         long guildId = voiceContext.guild().getIdLong();
         var audioManager = voiceContext.audioManager();
-        if (!audioManager.isConnected() && !audioManager.isAttemptingToConnect()) {
+        if (!audioManager.isConnected()) {
             event.reply("Я и так не подключён к голосовому каналу.")
                     .setEphemeral(true)
                     .queue(queueSuccessConsumer(log), queueFailureConsumer(log));

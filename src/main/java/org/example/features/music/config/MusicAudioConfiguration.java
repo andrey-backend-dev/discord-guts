@@ -17,7 +17,7 @@ public class MusicAudioConfiguration {
         playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.HIGH);
         playerManager.getConfiguration().setOutputFormat(StandardAudioDataFormats.DISCORD_OPUS);
         AudioSourceManagers.registerRemoteSources(playerManager);
-        AudioSourceManagers.registerLocalSources(playerManager);
+        AudioSourceManagers.registerLocalSource(playerManager);
         return playerManager;
     }
 }

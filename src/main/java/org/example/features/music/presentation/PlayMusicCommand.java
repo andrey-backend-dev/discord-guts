@@ -1,6 +1,7 @@
 package org.example.features.music.presentation;
 
 import lombok.extern.slf4j.Slf4j;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionMapping;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -9,6 +10,8 @@ import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import org.example.features.music.application.MusicPlayRequestResult;
 import org.example.features.music.application.MusicService;
 import org.springframework.stereotype.Component;
+
+import java.util.function.Consumer;
 
 @Slf4j
 @Component
@@ -53,7 +56,7 @@ public class PlayMusicCommand extends AbstractMusicCommand {
         var audioManager = voiceContext.audioManager();
         long guildId = voiceContext.guild().getIdLong();
         audioManager.setSendingHandler(musicService.getSendHandler(guildId));
-        if (!audioManager.isConnected() && !audioManager.isAttemptingToConnect()) {
+        if (!audioManager.isConnected()) {
             audioManager.openAudioConnection(voiceContext.channel());
         }
 
@@ -64,7 +67,7 @@ public class PlayMusicCommand extends AbstractMusicCommand {
                     if (throwable != null) {
                         log.error("Не удалось обработать запрос воспроизведения для гильдии {}", guildId, throwable);
                         event.getHook().sendMessage("Произошла ошибка при загрузке трека. Попробуйте позже.")
-                                .queue(queueSuccessConsumer(log), queueFailureConsumer(log));
+                                .queue((Consumer<? super Message>) queueSuccessConsumer(log), queueFailureConsumer(log));
                         return;
                     }
                     handlePlayResult(event, result);
@@ -75,7 +78,7 @@ public class PlayMusicCommand extends AbstractMusicCommand {
         if (!result.success()) {
             event.getHook().sendMessage(result.errorMessage())
                     .setEphemeral(true)
-                    .queue(queueSuccessConsumer(log), queueFailureConsumer(log));
+                    .queue((Consumer<? super Message>) queueSuccessConsumer(log), queueFailureConsumer(log));
             return;
         }
         StringBuilder response = new StringBuilder();
@@ -91,7 +94,7 @@ public class PlayMusicCommand extends AbstractMusicCommand {
             response.append(" Плюс ещё ").append(result.additionalTracks()).append(" трек(ов) из плейлиста.");
         }
         event.getHook().sendMessage(response.toString())
-                .queue(queueSuccessConsumer(log), queueFailureConsumer(log));
+                .queue((Consumer<? super Message>) queueSuccessConsumer(log), queueFailureConsumer(log));
     }
 
     @Override

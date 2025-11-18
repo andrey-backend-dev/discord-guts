@@ -1,15 +1,15 @@
 package org.example.features.music.application;
 
+import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
-import com.sedmelluq.discord.lavaplayer.track.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.features.music.domain.GuildMusicManager;
-import org.example.features.music.domain.MusicLoopMode;
 import org.example.features.music.domain.LavaPlayerSendHandler;
+import org.example.features.music.domain.MusicLoopMode;
 import org.example.features.music.domain.TrackMetadata;
 import org.springframework.stereotype.Service;
 

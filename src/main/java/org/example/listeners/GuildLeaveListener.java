@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.events.guild.GuildLeaveEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import org.example.features.music.application.MusicService;
 import org.example.persistence.guild.GuildDataCleanupService;
 import org.springframework.stereotype.Component;
 
@@ -13,11 +14,13 @@ import org.springframework.stereotype.Component;
 public class GuildLeaveListener extends ListenerAdapter {
 
     private final GuildDataCleanupService guildDataCleanupService;
+    private final MusicService musicService;
 
     @Override
     public void onGuildLeave(GuildLeaveEvent event) {
         var guild = event.getGuild();
         log.info("Bot removed from guild '{}' ({}). Cleaning up persisted data.", guild.getName(), guild.getId());
         guildDataCleanupService.removeGuildData(guild.getIdLong());
+        musicService.leaveGuild(guild.getIdLong());
     }
 }

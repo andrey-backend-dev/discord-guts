@@ -19,7 +19,7 @@
         <lombok.version>1.18.38</lombok.version>
         <liquibase.version>4.33.0</liquibase.version>
         <mapstruct.version>1.6.3</mapstruct.version>
-        <lavaplayer.version>2.2.4</lavaplayer.version>
+        <lavaplayer.version>2.2.5</lavaplayer.version>
     </properties>
 
     <repositories>

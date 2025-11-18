@@ -46,17 +46,33 @@ public class NowPlayingCommand extends AbstractMusicCommand {
         String total = formatDuration(track.getDuration());
         String requester = requester(track);
         String message = String.format("Сейчас играет **%s** [`%s/%s`] — запросил %s.",
-                track.getInfo().title, current, total, requester);
+                title(track), current, total, requester);
         event.reply(message)
                 .queue(queueSuccessConsumer(log), queueFailureConsumer(log));
     }
 
     private String requester(AudioTrack track) {
-        Object data = track.getUserData();
-        if (data instanceof TrackMetadata metadata) {
+        TrackMetadata metadata = metadata(track);
+        if (metadata != null) {
             return metadata.requesterName();
         }
         return "неизвестно";
+    }
+
+    private String title(AudioTrack track) {
+        TrackMetadata metadata = metadata(track);
+        if (metadata != null) {
+            return metadata.titleOr(track.getInfo().title);
+        }
+        return track.getInfo().title;
+    }
+
+    private TrackMetadata metadata(AudioTrack track) {
+        Object data = track.getUserData();
+        if (data instanceof TrackMetadata metadata) {
+            return metadata;
+        }
+        return null;
     }
 
     @Override

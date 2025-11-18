@@ -5,12 +5,15 @@ import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import com.sedmelluq.discord.lavaplayer.track.AudioTrackInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.features.music.domain.GuildMusicManager;
 import org.example.features.music.domain.LavaPlayerSendHandler;
 import org.example.features.music.domain.MusicLoopMode;
 import org.example.features.music.domain.TrackMetadata;
+import org.example.features.music.infrastructure.youtube.YoutubeAudioResolver;
+import org.example.features.music.infrastructure.youtube.YoutubeAudioResolver.ResolvedYoutubeTrack;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedList;
@@ -19,6 +22,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
 
 @Slf4j
@@ -29,6 +33,8 @@ public class MusicService {
     private static final Pattern URL_PATTERN = Pattern.compile("^(https?://).+", Pattern.CASE_INSENSITIVE);
 
     private final AudioPlayerManager audioPlayerManager;
+    private final YoutubeAudioResolver youtubeAudioResolver;
+    private final ExecutorService musicLookupExecutor;
     private final Map<Long, GuildMusicManager> musicManagers = new ConcurrentHashMap<>();
 
     public CompletableFuture<MusicPlayRequestResult> loadAndPlay(long guildId, String rawQuery, TrackMetadata metadata) {
@@ -37,12 +43,38 @@ public class MusicService {
             return CompletableFuture.completedFuture(MusicPlayRequestResult.failure("Нужно указать ссылку или поисковый запрос."));
         }
         GuildMusicManager guildMusicManager = getOrCreateGuildManager(guildId);
+        return CompletableFuture
+                .supplyAsync(() -> youtubeAudioResolver.resolve(query), musicLookupExecutor)
+                .exceptionally(throwable -> {
+                    log.warn("Не удалось получить поток через yt-dlp", throwable);
+                    return Optional.empty();
+                })
+                .thenCompose(resolution -> {
+                    TrackMetadata enrichedMetadata = resolution
+                            .map(resolved -> metadata.withTrackInfo(
+                                    resolved.trackInfo().title,
+                                    resolved.trackInfo().author,
+                                    resolved.trackInfo().uri,
+                                    resolved.trackInfo().length))
+                            .orElse(metadata);
+                    Optional<AudioTrackInfo> preferredInfo = resolution.map(ResolvedYoutubeTrack::trackInfo);
+                    String identifier = resolution.map(ResolvedYoutubeTrack::streamUrl)
+                            .orElse(resolveIdentifier(query));
+                    return loadIdentifier(guildMusicManager, guildId, identifier, enrichedMetadata, preferredInfo, rawQuery);
+                });
+    }
+
+    private CompletableFuture<MusicPlayRequestResult> loadIdentifier(GuildMusicManager guildMusicManager,
+                                                                     long guildId,
+                                                                     String identifier,
+                                                                     TrackMetadata metadata,
+                                                                     Optional<AudioTrackInfo> preferredInfo,
+                                                                     String rawQuery) {
         CompletableFuture<MusicPlayRequestResult> future = new CompletableFuture<>();
-        String identifier = resolveIdentifier(query);
         audioPlayerManager.loadItemOrdered(guildMusicManager, identifier, new AudioLoadResultHandler() {
             @Override
             public void trackLoaded(AudioTrack track) {
-                handleSingleTrack(guildMusicManager, track, metadata, future, 0);
+                handleSingleTrack(guildMusicManager, track, metadata, preferredInfo, future, 0);
             }
 
             @Override
@@ -53,7 +85,7 @@ public class MusicService {
                         future.complete(MusicPlayRequestResult.failure("Ничего не найдено по запросу."));
                         return;
                     }
-                    handleSingleTrack(guildMusicManager, first, metadata, future, 0);
+                    handleSingleTrack(guildMusicManager, first, metadata, preferredInfo, future, 0);
                     return;
                 }
                 LinkedList<AudioTrack> orderedTracks = orderPlaylistTracks(playlist);
@@ -62,7 +94,7 @@ public class MusicService {
                     return;
                 }
                 AudioTrack firstTrack = orderedTracks.removeFirst();
-                handlePlaylist(guildMusicManager, firstTrack, orderedTracks, metadata, future);
+                handlePlaylist(guildMusicManager, firstTrack, orderedTracks, metadata, preferredInfo, future);
             }
 
             @Override
@@ -168,22 +200,26 @@ public class MusicService {
     }
 
     private void handleSingleTrack(GuildMusicManager manager, AudioTrack track, TrackMetadata metadata,
+                                   Optional<AudioTrackInfo> preferredInfo,
                                    CompletableFuture<MusicPlayRequestResult> future, int additionalTracks) {
         track.setUserData(metadata);
         int position = manager.getScheduler().enqueue(track);
         boolean startedImmediately = position == 0;
-        future.complete(MusicPlayRequestResult.success(track.getInfo(), startedImmediately, position, additionalTracks));
+        AudioTrackInfo info = preferredInfo.orElse(track.getInfo());
+        future.complete(MusicPlayRequestResult.success(info, startedImmediately, position, additionalTracks));
     }
 
     private void handlePlaylist(GuildMusicManager manager, AudioTrack firstTrack, List<AudioTrack> remaining,
-                                TrackMetadata metadata, CompletableFuture<MusicPlayRequestResult> future) {
+                                TrackMetadata metadata, Optional<AudioTrackInfo> preferredInfo,
+                                CompletableFuture<MusicPlayRequestResult> future) {
         firstTrack.setUserData(metadata);
         int position = manager.getScheduler().enqueue(firstTrack);
         for (AudioTrack track : remaining) {
             track.setUserData(metadata);
             manager.getScheduler().enqueue(track);
         }
-        future.complete(MusicPlayRequestResult.success(firstTrack.getInfo(), position == 0, position, remaining.size()));
+        AudioTrackInfo info = preferredInfo.orElse(firstTrack.getInfo());
+        future.complete(MusicPlayRequestResult.success(info, position == 0, position, remaining.size()));
     }
 
     private LinkedList<AudioTrack> orderPlaylistTracks(AudioPlaylist playlist) {

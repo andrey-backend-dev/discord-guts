@@ -8,6 +8,4 @@ public class GuildRoleDto {
     private Long id;
     private String name;
     private GuildDto guild;
-    private boolean featureCrIsChangeable;
-    private boolean featureCrIsSettable;
 }

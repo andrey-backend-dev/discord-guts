@@ -24,10 +24,6 @@ public class GuildRole {
     @JoinColumn(name = "guild_id")
     private Guild guild;
 
-    private boolean featureCrIsChangeable;
-
-    private boolean featureCrIsSettable;
-
     /**
      * Many-To-Many сущность users_guild_role
      */

@@ -3,9 +3,12 @@ package org.example.features.changerole;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.Role;
+import org.example.persistence.changerole.FeatureChangeRoleConfiguration;
+import org.example.persistence.changerole.FeatureChangeRoleConfigurationRepository;
 import org.example.persistence.feature.Feature;
 import org.example.persistence.feature.FeatureName;
 import org.example.persistence.feature.FeatureRepository;
+import org.example.persistence.featureconfiguration.FeatureConfigurationId;
 import org.example.persistence.guild.Guild;
 import org.example.persistence.guild.GuildRepository;
 import org.example.persistence.m2m.guildfeature.GuildFeature;
@@ -16,7 +19,6 @@ import org.example.persistence.role.GuildRoleRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,24 +31,28 @@ public class ChangeRoleFeatureService {
     private final GuildRoleRepository guildRoleRepository;
     private final FeatureRepository featureRepository;
     private final GuildFeatureRepository guildFeatureRepository;
+    private final FeatureChangeRoleConfigurationRepository changeRoleConfigurationRepository;
 
     @Transactional
     public void registerConfiguration(
             net.dv8tion.jda.api.entities.Guild jdaGuild, Role changeableRole, Role settableRole
     ) {
         Guild guild = upsertGuild(jdaGuild);
-        GuildRole changeable = upsertGuildRole(guild, changeableRole);
-        GuildRole settable = upsertGuildRole(guild, settableRole);
+        GuildRole changeable = guildRoleRepository.save(upsertGuildRole(guild, changeableRole));
+        GuildRole settable = guildRoleRepository.save(upsertGuildRole(guild, settableRole));
 
-        resetAssignments(guild.getId(), changeable.getId(), settable.getId());
+        Feature feature = ensureFeature();
+        FeatureConfigurationId configurationId = new FeatureConfigurationId(guild.getId(), feature.getId());
+        FeatureChangeRoleConfiguration configuration = changeRoleConfigurationRepository
+                .findById(configurationId)
+                .orElseGet(() -> new FeatureChangeRoleConfiguration()
+                        .setId(configurationId)
+                        .setGuild(guild)
+                        .setFeature(feature));
 
-        changeable.setFeatureCrIsChangeable(true);
-        changeable.setFeatureCrIsSettable(false);
-        settable.setFeatureCrIsSettable(true);
-        settable.setFeatureCrIsChangeable(false);
-
-        guildRoleRepository.save(changeable);
-        guildRoleRepository.save(settable);
+        configuration.setChangeableRole(changeable);
+        configuration.setSettableRole(settable);
+        changeRoleConfigurationRepository.save(configuration);
 
         setFeatureEnabled(guild, true);
     }
@@ -66,8 +72,7 @@ public class ChangeRoleFeatureService {
                     }
                     return true;
                 })
-                .map(GuildFeature::getGuild)
-                .map(this::toConfiguration)
+                .map(guildFeature -> toConfiguration(guildFeature.getGuild(), guildFeature.getFeature()))
                 .flatMap(Optional::stream)
                 .toList();
     }
@@ -78,30 +83,32 @@ public class ChangeRoleFeatureService {
         setFeatureEnabled(guild, enabled);
     }
 
-    private Optional<ChangeRoleConfiguration> toConfiguration(Guild guild) {
-        Optional<GuildRole> changeable = guildRoleRepository
-                .findAllByGuild_IdAndFeatureCrIsChangeableTrue(guild.getId())
-                .stream()
-                .findFirst();
-        Optional<GuildRole> settable = guildRoleRepository
-                .findAllByGuild_IdAndFeatureCrIsSettableTrue(guild.getId())
-                .stream()
-                .findFirst();
-
-        if (changeable.isEmpty() || settable.isEmpty()) {
-            log.warn("Guild '{}' ({}) has change role feature enabled but configuration is incomplete.",
-                    guild.getName(), guild.getId());
+    private Optional<ChangeRoleConfiguration> toConfiguration(Guild guild, Feature feature) {
+        if (feature == null) {
             return Optional.empty();
         }
 
-        return Optional.of(new ChangeRoleConfiguration(
-                guild.getId(),
-                guild.getName(),
-                changeable.get().getId(),
-                changeable.get().getName(),
-                settable.get().getId(),
-                settable.get().getName()
-        ));
+        FeatureConfigurationId id = new FeatureConfigurationId(guild.getId(), feature.getId());
+        return changeRoleConfigurationRepository.findById(id)
+                .flatMap(configuration -> {
+                    GuildRole changeable = configuration.getChangeableRole();
+                    GuildRole settable = configuration.getSettableRole();
+
+                    if (changeable == null || settable == null) {
+                        log.warn("Guild '{}' ({}) has change role feature enabled but configuration is incomplete.",
+                                guild.getName(), guild.getId());
+                        return Optional.empty();
+                    }
+
+                    return Optional.of(new ChangeRoleConfiguration(
+                            guild.getId(),
+                            guild.getName(),
+                            changeable.getId(),
+                            changeable.getName(),
+                            settable.getId(),
+                            settable.getName()
+                    ));
+                });
     }
 
     private Guild upsertGuild(net.dv8tion.jda.api.entities.Guild jdaGuild) {
@@ -119,28 +126,6 @@ public class ChangeRoleFeatureService {
                         .setName(role.getName())
                         .setGuild(guild)
                 );
-    }
-
-    private void resetAssignments(Long guildId, Long changeableRoleId, Long settableRoleId) {
-        List<GuildRole> toUpdate = new ArrayList<>();
-        guildRoleRepository.findAllByGuild_IdAndFeatureCrIsChangeableTrue(guildId)
-                .stream()
-                .filter(role -> !role.getId().equals(changeableRoleId))
-                .forEach(role -> {
-                    role.setFeatureCrIsChangeable(false);
-                    toUpdate.add(role);
-                });
-        guildRoleRepository.findAllByGuild_IdAndFeatureCrIsSettableTrue(guildId)
-                .stream()
-                .filter(role -> !role.getId().equals(settableRoleId))
-                .forEach(role -> {
-                    role.setFeatureCrIsSettable(false);
-                    toUpdate.add(role);
-                });
-
-        if (!toUpdate.isEmpty()) {
-            guildRoleRepository.saveAll(toUpdate);
-        }
     }
 
     private void setFeatureEnabled(Guild guild, boolean enabled) {

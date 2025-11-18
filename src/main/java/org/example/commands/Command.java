@@ -1,7 +1,6 @@
 package org.example.commands;
 
 import net.dv8tion.jda.api.events.GenericEvent;
-import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import org.slf4j.Logger;
 
@@ -17,7 +16,7 @@ public interface Command<T extends GenericEvent> {
 
     CommandData getCommandData();
 
-    default Consumer<? super InteractionHook> queueSuccessConsumer(Logger log) {
+    default <R> Consumer<R> queueSuccessConsumer(Logger log) {
         return _ -> log.info("{} command interacted successfully.", getName());
     }
 

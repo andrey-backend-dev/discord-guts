@@ -1,6 +1,5 @@
-package org.example.persistence.channelguard;
+package org.example.persistence.changerole;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -13,12 +12,13 @@ import lombok.experimental.Accessors;
 import org.example.persistence.feature.Feature;
 import org.example.persistence.featureconfiguration.FeatureConfigurationId;
 import org.example.persistence.guild.Guild;
+import org.example.persistence.role.GuildRole;
 
 @Data
 @Entity
-@Table(name = "feature_channel_guard_configuration")
+@Table(name = "feature_change_role_configuration")
 @Accessors(chain = true)
-public class ChannelGuardConfiguration {
+public class FeatureChangeRoleConfiguration {
 
     @EmbeddedId
     private FeatureConfigurationId id;
@@ -33,12 +33,11 @@ public class ChannelGuardConfiguration {
     @JoinColumn(name = "feature_id")
     private Feature feature;
 
-    @Column(name = "text_channel_id")
-    private Long textChannelId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "changeable_role_id")
+    private GuildRole changeableRole;
 
-    @Column(name = "media_channel_id")
-    private Long mediaChannelId;
-
-    @Column(name = "music_channel_id")
-    private Long musicChannelId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "settable_role_id")
+    private GuildRole settableRole;
 }

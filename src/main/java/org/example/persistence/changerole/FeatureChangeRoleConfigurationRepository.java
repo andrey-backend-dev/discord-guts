@@ -1,9 +1,9 @@
-package org.example.persistence.channelguard;
+package org.example.persistence.changerole;
 
 import org.example.persistence.featureconfiguration.FeatureConfigurationId;
 import org.springframework.data.repository.CrudRepository;
 
-public interface ChannelGuardConfigurationRepository extends CrudRepository<ChannelGuardConfiguration, FeatureConfigurationId> {
+public interface FeatureChangeRoleConfigurationRepository extends CrudRepository<FeatureChangeRoleConfiguration, FeatureConfigurationId> {
 
     void deleteAllByGuild_Id(Long guildId);
 }

@@ -9,6 +9,7 @@ import org.example.persistence.channelguard.ChannelGuardConfigurationRepository;
 import org.example.persistence.feature.Feature;
 import org.example.persistence.feature.FeatureName;
 import org.example.persistence.feature.FeatureRepository;
+import org.example.persistence.featureconfiguration.FeatureConfigurationId;
 import org.example.persistence.guild.GuildRepository;
 import org.example.persistence.m2m.guildfeature.GuildFeature;
 import org.example.persistence.m2m.guildfeature.GuildFeatureId;
@@ -41,8 +42,13 @@ public class ChannelGuardFeatureService {
                                     @Nullable GuildMessageChannel mediaChannel,
                                     @Nullable GuildMessageChannel musicChannel) {
         org.example.persistence.guild.Guild guild = upsertGuild(jdaGuild);
-        ChannelGuardConfiguration configuration = configurationRepository.findById(guild.getId())
-                .orElseGet(() -> new ChannelGuardConfiguration().setGuildId(guild.getId()));
+        Feature feature = ensureFeature();
+        FeatureConfigurationId configurationId = new FeatureConfigurationId(guild.getId(), feature.getId());
+        ChannelGuardConfiguration configuration = configurationRepository.findById(configurationId)
+                .orElseGet(() -> new ChannelGuardConfiguration()
+                        .setId(configurationId)
+                        .setGuild(guild)
+                        .setFeature(feature));
 
         if (textChannel != null) {
             configuration.setTextChannelId(textChannel.getIdLong());
@@ -59,7 +65,9 @@ public class ChannelGuardFeatureService {
 
     @Transactional(readOnly = true)
     public Optional<ChannelGuardConfiguration> findConfiguration(long guildId) {
-        return configurationRepository.findById(guildId);
+        Feature feature = ensureFeature();
+        FeatureConfigurationId configurationId = new FeatureConfigurationId(guildId, feature.getId());
+        return configurationRepository.findById(configurationId);
     }
 
     @Transactional(readOnly = true)
